@@ -138,16 +138,17 @@
 //of rotation.
 #define CURR_MASK 0x2 //Mask for the current state in determining direction
 //of rotation.
-#define INVALID   0x3 //XORing two states where both bits have changed.
+#define INVALID 0x3 //XORing two states where both bits have changed.
 
 /**
  * Quadrature Encoder Interface.
  */
-class QEI {
+class QEI
+{
 
-public:
-
-    typedef enum Encoding {
+  public:
+    typedef enum Encoding
+    {
 
         X2_ENCODING,
         X4_ENCODING
@@ -208,8 +209,7 @@ public:
      */
     int getRevolutions(void);
 
-private:
-
+  private:
     /**
      * Update the pulse count.
      *
@@ -232,13 +232,12 @@ private:
     InterruptIn channelB_;
     InterruptIn index_;
 
-    int          pulsesPerRev_;
-    int          prevState_;
-    int          currState_;
+    int pulsesPerRev_;
+    int prevState_;
+    int currState_;
 
     volatile int pulses_;
     volatile int revolutions_;
-
 };
 
 #endif /* QEI_H */

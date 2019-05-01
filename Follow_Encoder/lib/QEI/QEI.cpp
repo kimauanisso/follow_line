@@ -133,12 +133,13 @@ QEI::QEI(PinName channelA,
          PinName index,
          int pulsesPerRev,
          Encoding encoding) : channelA_(channelA), channelB_(channelB),
-        index_(index) {
+                              index_(index)
+{
 
-    pulses_       = 0;
-    revolutions_  = 0;
+    pulses_ = 0;
+    revolutions_ = 0;
     pulsesPerRev_ = pulsesPerRev;
-    encoding_     = encoding;
+    encoding_ = encoding;
 
     //Workout what the current state is.
     int chanA = channelA_.read();
@@ -155,40 +156,41 @@ QEI::QEI(PinName channelA,
     channelA_.fall(this, &QEI::encode);
 
     //If we're using X4 encoding, then attach interrupts to channel B too.
-    if (encoding == X4_ENCODING) {
+    if (encoding == X4_ENCODING)
+    {
         channelB_.rise(this, &QEI::encode);
         channelB_.fall(this, &QEI::encode);
     }
     //Index is optional.
-    if (index !=  NC) {
+    if (index != NC)
+    {
         index_.rise(this, &QEI::index);
     }
-
 }
 
-void QEI::reset(void) {
+void QEI::reset(void)
+{
 
-    pulses_      = 0;
+    pulses_ = 0;
     revolutions_ = 0;
-
 }
 
-int QEI::getCurrentState(void) {
+int QEI::getCurrentState(void)
+{
 
     return currState_;
-
 }
 
-int QEI::getPulses(void) {
+int QEI::getPulses(void)
+{
 
     return pulses_;
-
 }
 
-int QEI::getRevolutions(void) {
+int QEI::getRevolutions(void)
+{
 
     return revolutions_;
-
 }
 
 // +-------------+
@@ -235,55 +237,58 @@ int QEI::getRevolutions(void) {
 // We might enter an invalid state for a number of reasons which are hard to
 // predict - if this is the case, it is generally safe to ignore it, update
 // the state and carry on, with the error correcting itself shortly after.
-void QEI::encode(void) {
+void QEI::encode(void)
+{
 
     int change = 0;
-    int chanA  = channelA_.read();
-    int chanB  = channelB_.read();
+    int chanA = channelA_.read();
+    int chanB = channelB_.read();
 
     //2-bit state.
     currState_ = (chanA << 1) | (chanB);
 
-    if (encoding_ == X2_ENCODING) {
+    if (encoding_ == X2_ENCODING)
+    {
 
         //11->00->11->00 is counter clockwise rotation or "forward".
         if ((prevState_ == 0x3 && currState_ == 0x0) ||
-                (prevState_ == 0x0 && currState_ == 0x3)) {
+            (prevState_ == 0x0 && currState_ == 0x3))
+        {
 
             pulses_++;
-
         }
         //10->01->10->01 is clockwise rotation or "backward".
         else if ((prevState_ == 0x2 && currState_ == 0x1) ||
-                 (prevState_ == 0x1 && currState_ == 0x2)) {
+                 (prevState_ == 0x1 && currState_ == 0x2))
+        {
 
             pulses_--;
-
         }
-
-    } else if (encoding_ == X4_ENCODING) {
+    }
+    else if (encoding_ == X4_ENCODING)
+    {
 
         //Entered a new valid state.
-        if (((currState_ ^ prevState_) != INVALID) && (currState_ != prevState_)) {
+        if (((currState_ ^ prevState_) != INVALID) && (currState_ != prevState_))
+        {
             //2 bit state. Right hand bit of prev XOR left hand bit of current
             //gives 0 if clockwise rotation and 1 if counter clockwise rotation.
             change = (prevState_ & PREV_MASK) ^ ((currState_ & CURR_MASK) >> 1);
 
-            if (change == 0) {
+            if (change == 0)
+            {
                 change = -1;
             }
 
             pulses_ -= change;
         }
-
     }
 
     prevState_ = currState_;
-
 }
 
-void QEI::index(void) {
+void QEI::index(void)
+{
 
     revolutions_++;
-
 }
