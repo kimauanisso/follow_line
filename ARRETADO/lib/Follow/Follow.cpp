@@ -102,6 +102,7 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
     mapRight[100];//right wheel displacement 
     mapLenght[100];//line lenght (can be curve or straight line)
     mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
+    speed[100];//speed
     markCount = 0;//number of marks read by the robt 
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -123,6 +124,8 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
 
     mapLeft[0] = 0;//left wheel displacement
     mapRight[0] = 0;//right wheel displacement 
+
+    fastLapCount = 0;//used on the fast lap
 }
 
 void Follow::waitButton()// wait until the button is pressed
@@ -269,11 +272,22 @@ void Follow::Map()
 
 }
 
-void Follow::updateFastLap(float acceleration, float maxSpeed)//setpoint acceleration, setpoint maxSpeed
+float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
+    return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
+}
+
+void Follow::calcSpeed(){
+    
+    if( (this->getDisplacement()) < mapLenght[fastLapCount]){
+    }
+}
+
+
+void Follow::updateFastLap(float a, float maxSpeed)//setpoint acceleration, setpoint maxSpeed
 {
 
-    float setlinV = 0;
-    
+    float setlinV;
+
     int dt = millis() - time_;
     if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 
     {

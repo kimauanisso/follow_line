@@ -16,6 +16,10 @@ MotorControl rightMotor(2, 0.000005, 0, &rightPWM, &rightEncoder); //kP, kI, kD,
 //Follow Class----angular velocity, sensor bar, curve radius...
 Follow follow(0.03, 0, 0.05, &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
 
+float speed[100]
+{
+1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3,1,2,2,3
+};
 
 int main()
 {

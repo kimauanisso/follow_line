@@ -60,15 +60,20 @@ class Follow
     float getBattery(void);
     void waitButton(void);//wait for the button
     void start();//starts clock when the button is pressed
+    
     void updateMapLap(float);//update map lap with the linear speed[m/s] as parameter
+    
     void updateFastLap(float, float);//update fast lap with the linear speed[m/s] as parameter
 
-    void calcSensor();
-    float getSensor();
-    bool getMark();
-    void Map();
-
     float getDisplacement();
+    void calcSensor();
+    float getSensor(); 
+    bool getMark();
+    
+    void Map();
+    void calcSpeed();//calculates the speed at each eache position
+    float accelerationZone(float, float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
+
     void bluetooth();
     void stop();
   
@@ -78,6 +83,7 @@ class Follow
     float mapRight[100];
     float mapLenght[100];//line lenght (can be curve or straight line)
     float mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
+    float speed[100];
     int markCount;
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -98,6 +104,8 @@ class Follow
     float kD_;
     float I;
     float error_;
+
+    int fastLapCount;//used on the fast lap
 
     int Mark_Debouncing_Clock;
 };
