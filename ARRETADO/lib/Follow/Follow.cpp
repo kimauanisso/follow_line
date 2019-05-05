@@ -67,6 +67,11 @@ void MotorControl::update(float setpoint)
     motor_->speed(P + I + D);
 }
 
+void MotorControl::reset()
+{
+    encoder_->reset();
+}
+
 void MotorControl::stop()
 {
     motor_->speed(0);
@@ -125,15 +130,15 @@ void Follow::waitButton()// wait until the button is pressed
     Button.mode(PullUp);
     while (1)
     {
-        if (!Button)
+        if (!Button)//Detect Button Press
         {
             break;
-        } //Detect Button Press
+        } 
         wait(0.001);
     }
 }
 
-void Follow::start() //wait until the button is pressed and then start the timer
+void Follow::start() //wait until the button is pressed, then reset the encoders and start the timer
 {
     waitButton();
 
@@ -141,6 +146,8 @@ void Follow::start() //wait until the button is pressed and then start the timer
     wait(0.5);
     Buzz = 0;
 
+    left_->reset();
+    right_->reset();
     millisStart();
 }
 
@@ -175,14 +182,10 @@ void Follow::calcSensor()
     }
 }
 
-float Follow::getSensorSetpoint() //returns the SensorBar setpoint calculated with angular
-{
-    return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
-}
-
 float Follow::getSensor() //returns the SensorBar position
 {
     return (sensor_);
+    //return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
 }
 
 float Follow::getDisplacement() //returns encoder measured displacement UNTIL that moment
@@ -196,7 +199,7 @@ void Follow::bluetooth(){
 
     int i = 0;
     for(i=0; i<markCount; i++){
-        //bl.printf("Position:%i----Radius:%i----Speed:%i---[x10000]\n",int(Map[i]*10000), int(MapRadius[i]*10000), int(automaticSpeed[i]*10000));
+        bl.printf("%i--Lenght[m x 10^4]: %i--Radius[m x 10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
     }
 }
 
@@ -264,4 +267,35 @@ void Follow::Map()
         }
     }
 
+}
+
+void Follow::updateFastLap(float acceleration, float maxSpeed)//setpoint acceleration, setpoint maxSpeed
+{
+
+    float setlinV = 0;
+    
+    int dt = millis() - time_;
+    if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 
+    {
+        time_ = millis();
+
+        //update displacement
+        displacement_ = this->getDisplacement();
+        
+        //update bar sensors
+        this->calcSensor();
+
+        //update error and prevError
+        float prevError = error_;
+        error_ = getSensor();
+
+        //update PID
+        float P = error_ * kP_;
+        I += error_ * kI_;
+        float D = ((error_ - prevError) / (dt)) * kD_;
+
+        //update setpoint speed
+        left_->update(setlinV + (P + I + D));
+        right_->update(setlinV - (P + I + D));
+    }
 }

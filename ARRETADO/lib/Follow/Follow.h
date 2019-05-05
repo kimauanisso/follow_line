@@ -31,6 +31,7 @@ class MotorControl
     float getSpeed();
     float getDs();
     void stop();
+    void reset();
 
     float displacement_;
     float speed_;
@@ -60,11 +61,10 @@ class Follow
     void waitButton(void);//wait for the button
     void start();//starts clock when the button is pressed
     void updateMapLap(float);//update map lap with the linear speed[m/s] as parameter
-    void updateFastLap(float);//update fast lap with the linear speed[m/s] as parameter
+    void updateFastLap(float, float);//update fast lap with the linear speed[m/s] as parameter
 
     void calcSensor();
     float getSensor();
-    float getSensorSetpoint();
     bool getMark();
     void Map();
 
