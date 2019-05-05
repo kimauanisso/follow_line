@@ -49,7 +49,7 @@ void MotorControl::update(float setpoint)
     float prevDisplacement = displacement_;
 
     //update motor displacement and speed
-    displacement_ = (encoder_->getPulses()) * Kwheel;
+    displacement_ = getDisplacement();
     Ds_ = (displacement_ - prevDisplacement);
 
     speed_ = 1000 * Ds_ / dt;
@@ -93,29 +93,31 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
 {
     //These Arrays will be calculated by the robot on its Mapping lap
     //----------------------------------------------------------------------------------------------------------------------------------------------------
-    Map[100];//Mark position[m]
-    MapRadius[100];//Curve Radius in [m], (straight line=9999999)
-    automaticSpeed[100];//setpoint for linear speed [m/s]
+    mapLeft[100];//left wheel displacement
+    mapRight[100];//right wheel displacement 
+    mapLenght[100];//line lenght (can be curve or straight line)
+    mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
+    markCount = 0;//number of marks read by the robt 
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-    left_ = left;
-    right_ = right;
+    left_ = left;           //left motor
+    right_ = right;         //right motor
     time_ = millis();
     loopTime_ = loopTime;
-    linV_ = 0;
-    angV_ = 0;
-    displacement_ = 0;
-    Ddisplacement_ = 0;
-    arc_ = 0;
-    sensor_ = 0;
+    displacement_ = 0;     //displacement
+    sensor_ = 0;           //line's position measured by the sensor bar
 
-    kP_ = kP;
+    //PID constants, error and I
+    kP_ = kP;       
     kI_ = kI;
     kD_ = kD;
     I = 0;
     error_ = 0;
 
-    Mark_Debouncing_Clock = 0;
+    Mark_Debouncing_Clock = 0;  //clock used for the mark sensor debouncing (starts at 0)
+
+    mapLeft[0] = 0;//left wheel displacement
+    mapRight[0] = 0;//right wheel displacement 
 }
 
 void Follow::waitButton()// wait until the button is pressed
@@ -149,7 +151,6 @@ bool Follow::getMark() //return 1 if the robot reads a mark
         if ((millis() - Mark_Debouncing_Clock) > MarkDebouncingTime)
         {
             Mark_Debouncing_Clock = millis();
-            //Buzz= !Buzz;
             return 1;
         }
     }
@@ -174,7 +175,7 @@ void Follow::calcSensor()
     }
 }
 
-float Follow::getSensorSetpoint()
+float Follow::getSensorSetpoint() //returns the SensorBar setpoint calculated with angular
 {
     return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
 }
@@ -189,62 +190,39 @@ float Follow::getDisplacement() //returns encoder measured displacement UNTIL th
     return ((left_->getDisplacement() + right_->getDisplacement()) / 2);
 }
 
-float Follow::getLinearSpeed() //returns encoder measured linear velocity AT that moment
-{
-    return (linV_);
-}
-
-float Follow::getAngularSpeed() //returns encoder measured angular velocity AT that moment
-{
-    return (angV_);
-}
-float Follow::getRadius() //returns the Curve Radius
-{
-    float radius;  
-
-    radius = Ddisplacement_ / arc_;
-    arc_=0;
-    Ddisplacement_=0;
-
-    return radius;
-
-
-}
-
 void Follow::bluetooth(){
-    Serial bl(BL_RX,BL_TX);//ativa a serial
+    Serial bl(BL_RX,BL_TX);//turn Serial on
+    waitButton();//wait for the button
+
     int i = 0;
-    waitButton();
-    for(i=0; i<100; i++){
-        if(automaticSpeed[i]!=0){
-            bl.printf("Position:%i----Radius:%i----Speed:%i---[x10000]\n",int(Map[i]*10000), int(MapRadius[i]*10000), int(automaticSpeed[i]*10000));
-        }
+    for(i=0; i<markCount; i++){
+        //bl.printf("Position:%i----Radius:%i----Speed:%i---[x10000]\n",int(Map[i]*10000), int(MapRadius[i]*10000), int(automaticSpeed[i]*10000));
     }
 }
 
-void Follow::stop(){
+void Follow::stop(){//stop motors
     left_->stop();
     right_->stop();
 }
 
-void Follow::update(float setlinV)
+void Follow::updateMapLap(float setlinV)//setpoint linear velocity
 {
 
+    if(getMark()){
+        markCount++;
+        mapLeft[markCount] = left_->getDisplacement();
+        mapRight[markCount] = right_->getDisplacement();
+    }
+    
     int dt = millis() - time_;
-
-    if (dt >= loopTime_)
+    if (dt >= loopTime_)//if dt is bigger than looptime, updte de bar PID and also de motor´s PID 
     {
-
         time_ = millis();
 
+        //update displacement
         displacement_ = this->getDisplacement();
-        angV_ = ((left_->getDs() - right_->getDs()) / dt) / RobotRadius; //updates encoder measured angular velocity
-        linV_ = (left_->getDs() + right_->getDs()) / (2 * dt);   //updates encoder measured linear velocity
-
-        //update radius variables
-        Ddisplacement_ += angV_;
-        arc_++; 
-
+        
+        //update bar sensors
         this->calcSensor();
 
         //update error and prevError
@@ -256,8 +234,34 @@ void Follow::update(float setlinV)
         I += error_ * kI_;
         float D = ((error_ - prevError) / (dt)) * kD_;
 
-        //updates setpoint speed
+        //update setpoint speed
         left_->update(setlinV + (P + I + D));
         right_->update(setlinV - (P + I + D));
     }
+}
+
+void Follow::Map()
+{
+    float angle;
+
+    int i;
+    for(i=0; i<markCount; i++){
+        
+        //lenght = displacement - last displacement
+        mapLenght[i]=( (mapLeft[i+1]+mapRight[i+1])/2 ) - ( (mapLeft[i]+mapRight[i])/2 );
+
+        //robot angle = (Dleft - Dright)Robot radius 
+        angle = ( (mapLeft[i+1]-mapLeft[i]) - (mapRight[i+1]-mapRight[i]) ) / RobotRadius;        
+        
+        //curve
+        if (angle>0.000001){
+            //radius = arcLenght/angle
+            mapRadius[i] = mapLenght[i] / angle;
+        }
+        //straight line
+        else{
+            mapRadius[i] = 99999;
+        }
+    }
+
 }

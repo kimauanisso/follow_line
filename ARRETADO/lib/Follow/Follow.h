@@ -57,29 +57,29 @@ class Follow
     Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *right, int loopTime);
 
     float getBattery(void);
-    void waitButton(void);
-    void start();
-    void update(float);
+    void waitButton(void);//wait for the button
+    void start();//starts clock when the button is pressed
+    void updateMapLap(float);//update map lap with the linear speed[m/s] as parameter
+    void updateFastLap(float);//update fast lap with the linear speed[m/s] as parameter
 
-    void updateSensor();
     void calcSensor();
     float getSensor();
     float getSensorSetpoint();
     bool getMark();
+    void Map();
 
     float getDisplacement();
-    float getLinearSpeed();
-    float getAngularSpeed();
-    float getRadius();
     void bluetooth();
     void stop();
   
-  //These Arrays will be calculated by the robot on its Mapping lap
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  float Map[100];//Mark position[m]
-  float MapRadius[100];//Curve Radius in [m], (straight line=9999999)
-  float automaticSpeed[100];//setpoint for linear speed [m/s]
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
+    //These Arrays will be calculated by the robot on its Mapping lap
+    //----------------------------------------------------------------------------------------------------------------------------------------------------
+    float mapLeft[100];//Mark position[m]
+    float mapRight[100];
+    float mapLenght[100];//line lenght (can be curve or straight line)
+    float mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
+    int markCount;
+    //----------------------------------------------------------------------------------------------------------------------------------------------------
 
   private:
     MotorControl *left_;
@@ -88,10 +88,7 @@ class Follow
     int time_;
     int loopTime_;
     float linV_;
-    float angV_;
     float displacement_;
-    float Ddisplacement_;
-    float arc_;
     float sensor_;
 
     float calcAngularSpeed();
