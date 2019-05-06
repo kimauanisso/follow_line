@@ -270,23 +270,28 @@ void Follow::Map()
         }
     }
 
+    for(i=1; i<markCount; i++){
+        mapLenght[i]=mapLenght[i]+mapLenght[i-1];
+    }
+
 }
 
 float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
     return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
 }
 
-void Follow::calcSpeed(){
-    
-    if( (this->getDisplacement()) < mapLenght[fastLapCount]){
+float Follow::calcSpeed(){   
+    if( (this->getDisplacement()) > mapLenght[fastLapCount]){
+        fastLapCount++;
     }
+    return speed[fastLapCount];
 }
 
 
 void Follow::updateFastLap(float a, float maxSpeed)//setpoint acceleration, setpoint maxSpeed
 {
 
-    float setlinV;
+    float setlinV = calcSpeed();
 
     int dt = millis() - time_;
     if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 

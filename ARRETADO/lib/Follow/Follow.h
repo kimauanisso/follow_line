@@ -71,7 +71,7 @@ class Follow
     bool getMark();
     
     void Map();
-    void calcSpeed();//calculates the speed at each eache position
+    float calcSpeed();//calculates the speed at each eache position
     float accelerationZone(float, float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
 
     void bluetooth();
