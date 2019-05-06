@@ -90,13 +90,14 @@ class Follow
   private:
     MotorControl *left_;
     MotorControl *right_;
-
+    
     int time_;
     int loopTime_;
     float linV_;
     float displacement_;
     float sensor_;
 
+    void PID (float);
     float calcAngularSpeed();
 
     float kP_;

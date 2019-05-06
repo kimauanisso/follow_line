@@ -154,6 +154,22 @@ void Follow::start() //wait until the button is pressed, then reset the encoders
     millisStart();
 }
 
+
+void Follow::bluetooth(){
+    Serial bl(BL_RX,BL_TX);//turn Serial on
+    waitButton();//wait for the button
+
+    int i = 0;
+    for(i=0; i<markCount; i++){
+        bl.printf("%i--Lenght[m x 10^4]: %i--Radius[m x 10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
+    }
+}
+
+void Follow::stop(){//stop motors
+    left_->stop();
+    right_->stop();
+}
+
 bool Follow::getMark() //return 1 if the robot reads a mark
 {
     if (SensorC.read() < Ks)
@@ -196,32 +212,10 @@ float Follow::getDisplacement() //returns encoder measured displacement UNTIL th
     return ((left_->getDisplacement() + right_->getDisplacement()) / 2);
 }
 
-void Follow::bluetooth(){
-    Serial bl(BL_RX,BL_TX);//turn Serial on
-    waitButton();//wait for the button
-
-    int i = 0;
-    for(i=0; i<markCount; i++){
-        bl.printf("%i--Lenght[m x 10^4]: %i--Radius[m x 10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
-    }
-}
-
-void Follow::stop(){//stop motors
-    left_->stop();
-    right_->stop();
-}
-
-void Follow::updateMapLap(float setlinV)//setpoint linear velocity
-{
-
-    if(getMark()){
-        markCount++;
-        mapLeft[markCount] = left_->getDisplacement();
-        mapRight[markCount] = right_->getDisplacement();
-    }
-    
+void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
+   
     int dt = millis() - time_;
-    if (dt >= loopTime_)//if dt is bigger than looptime, updte de bar PID and also de motor´s PID 
+    if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 
     {
         time_ = millis();
 
@@ -276,6 +270,18 @@ void Follow::Map()
 
 }
 
+void Follow::updateMapLap(float setlinV)//setpoint linear velocity
+{
+
+    if(getMark()){
+        markCount++;
+        mapLeft[markCount] = left_->getDisplacement();
+        mapRight[markCount] = right_->getDisplacement();
+    }
+    
+    PID(setlinV);
+}
+
 float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
     return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
 }
@@ -292,29 +298,5 @@ void Follow::updateFastLap(float a, float maxSpeed)//setpoint acceleration, setp
 {
 
     float setlinV = calcSpeed();
-
-    int dt = millis() - time_;
-    if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 
-    {
-        time_ = millis();
-
-        //update displacement
-        displacement_ = this->getDisplacement();
-        
-        //update bar sensors
-        this->calcSensor();
-
-        //update error and prevError
-        float prevError = error_;
-        error_ = getSensor();
-
-        //update PID
-        float P = error_ * kP_;
-        I += error_ * kI_;
-        float D = ((error_ - prevError) / (dt)) * kD_;
-
-        //update setpoint speed
-        left_->update(setlinV + (P + I + D));
-        right_->update(setlinV - (P + I + D));
-    }
+    PID(setlinV);
 }
