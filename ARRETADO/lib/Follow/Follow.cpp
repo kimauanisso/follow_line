@@ -141,8 +141,7 @@ void Follow::waitButton()// wait until the button is pressed
     }
 }
 
-void Follow::start() //wait until the button is pressed, then reset the encoders and start the timer
-{
+void Follow::start(){ //wait until the button is pressed, then reset the encoders and start the timer
     waitButton();
 
     Buzz = 1;
@@ -170,8 +169,7 @@ void Follow::stop(){//stop motors
     right_->stop();
 }
 
-bool Follow::getMark() //return 1 if the robot reads a mark
-{
+bool Follow::getMark(){ //return 1 if the robot reads a mark
     if (SensorC.read() < Ks)
     {
         if ((millis() - Mark_Debouncing_Clock) > MarkDebouncingTime)
@@ -183,8 +181,7 @@ bool Follow::getMark() //return 1 if the robot reads a mark
     return 0;
 }
 
-void Follow::calcSensor()
-{
+void Follow::calcSensor(){
     int cont = 0;
     int i = 0;
 
@@ -201,14 +198,11 @@ void Follow::calcSensor()
     }
 }
 
-float Follow::getSensor() //returns the SensorBar position
-{
-    return (sensor_);
-    //return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
+float Follow::getSensor(){ //returns the SensorBar position
+    return (sensor_);//return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
 }
 
-float Follow::getDisplacement() //returns encoder measured displacement UNTIL that moment
-{
+float Follow::getDisplacement(){//returns encoder measured displacement UNTIL that moment
     return ((left_->getDisplacement() + right_->getDisplacement()) / 2);
 }
 
@@ -240,8 +234,7 @@ void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
     }
 }
 
-void Follow::Map()
-{
+void Follow::Map(){
     float angle;
 
     int i;
@@ -270,8 +263,11 @@ void Follow::Map()
 
 }
 
-void Follow::updateMapLap(float setlinV)//setpoint linear velocity
-{
+float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
+    return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
+}
+
+void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
     if(getMark()){
         markCount++;
@@ -282,21 +278,11 @@ void Follow::updateMapLap(float setlinV)//setpoint linear velocity
     PID(setlinV);
 }
 
-float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
-    return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
-}
-
-float Follow::calcSpeed(){   
+void Follow::updateFastLap(float a, float maxSpeed){//setpoint acceleration, setpoint maxSpeed
+    
     if( (this->getDisplacement()) > mapLenght[fastLapCount]){
         fastLapCount++;
     }
-    return speed[fastLapCount];
-}
 
-
-void Follow::updateFastLap(float a, float maxSpeed)//setpoint acceleration, setpoint maxSpeed
-{
-
-    float setlinV = calcSpeed();
-    PID(setlinV);
+    PID(speed[fastLapCount]);
 }
