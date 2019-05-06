@@ -236,18 +236,19 @@ void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
 
 void Follow::Map(){
     float angle;
+    float disp;
 
     int i;
     for(i=0; i<markCount; i++){
-        
+    
         //lenght = displacement - last displacement
-        mapLenght[i]=( (mapLeft[i+1]+mapRight[i+1])/2 ) - ( (mapLeft[i]+mapRight[i])/2 );
-
+        mapLenght[i] = ( (mapLeft[i+1]+mapRight[i+1])/2 ) - ( (mapLeft[i]+mapRight[i])/2 );
+        
         //robot angle = (Dleft - Dright)Robot radius 
-        angle = ( (mapLeft[i+1]-mapLeft[i]) - (mapRight[i+1]-mapRight[i]) ) / RobotRadius;        
+        angle = ( (mapLeft[i+1]-mapLeft[i]) - (mapRight[i+1]-mapRight[i]) ) / (2*RobotRadius);        
         
         //curve
-        if (angle>0.000001){
+        if (fabs(angle)>0.0001){
             //radius = arcLenght/angle
             mapRadius[i] = mapLenght[i] / angle;
         }
@@ -261,6 +262,17 @@ void Follow::Map(){
         mapLenght[i]=mapLenght[i]+mapLenght[i-1];
     }
 
+    //for(i=1; i<markCount; i++){
+    //    if( (mapLenght[i+1]-mapLenght[i]) < MarkDistance ){//correction to avoid more than one reading at the same mark
+    //        int j;
+    //        for(j=i;j<markCount;j++){
+    //           mapRadius[j+1]=mapRadius[j+2];
+    //           mapLenght[j]=mapLenght[j+1]; 
+    //        }
+    //    }
+    //}
+
+
 }
 
 float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
@@ -270,6 +282,7 @@ float Follow::accelerationZone(float v0, float v1, float acceleration){//calcula
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
     if(getMark()){
+        //Buzz=!Buzz;
         markCount++;
         mapLeft[markCount] = left_->getDisplacement();
         mapRight[markCount] = right_->getDisplacement();
@@ -278,7 +291,7 @@ void Follow::updateMapLap(float setlinV){//setpoint linear velocity
     PID(setlinV);
 }
 
-void Follow::updateFastLap(float a, float maxSpeed){//setpoint acceleration, setpoint maxSpeed
+void Follow::updateFastLap(float acceleration, float maxSpeed){//setpoint acceleration, setpoint maxSpeed
     
     if( (this->getDisplacement()) > mapLenght[fastLapCount]){
         fastLapCount++;

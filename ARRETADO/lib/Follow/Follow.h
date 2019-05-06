@@ -13,13 +13,14 @@
 #include "pinup.h"
 
 #define MarkDebouncingTime 100
-#define Kwheel 0.0008377333     //Wheel constant -> pulses*Kwheel
+#define Kwheel 0.0008623725     //Wheel constant -> pulses*Kwheel
 #define Ks 0.8                  //Sensor constant
-#define RobotRadius 0.0885              //Raio centro - motor
-#define Dbar 0.098              //m
-#define SEN0 0.15                //Angulo do sensor de dentro (rad)
-#define SEN1 2.0                 //Angulo do sensor do meio   (rad)
-#define SEN2 13.0                //Angulo do sensor de fora   (rad)
+#define RobotRadius 0.061773    //Raio centro - motor
+#define MarkDistance 0.01       //min distance between two marks[m]
+#define Dbar 0.098              //distance between the bar and the robot[m]
+#define SEN0 0.15               //Angulo do sensor de dentro (rad)
+#define SEN1 2.0                //Angulo do sensor do meio   (rad)
+#define SEN2 13.0               //Angulo do sensor de fora   (rad)
 
 //----------------------------------------------------------------------------------------------------------------
 class MotorControl

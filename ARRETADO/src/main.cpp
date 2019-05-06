@@ -36,7 +36,7 @@ int main()
 
     wait(1);
     follow.start();
-    while (follow.getDisplacement()<16){
+    while (follow.getDisplacement()<16.5){
         follow.updateFastLap(10, 2.5);//acceleration, maxSpeed
     }
 }
