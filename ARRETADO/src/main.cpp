@@ -14,7 +14,7 @@ MotorControl leftMotor(1.7, 0.000005, 0, &leftPWM, &leftEncoder);  //kP, kI, kD,
 MotorControl rightMotor(2, 0.000005, 0, &rightPWM, &rightEncoder); //kP, kI, kD, RightPWM address, RightEncoder address
 
 //Follow Class----angular velocity, sensor bar, curve radius...
-Follow follow(0.03, 0, 0.05, &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
+Follow follow(0.02, 0, 0.05, &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
 
 float speed[100]
 {
@@ -26,7 +26,7 @@ int main()
     wait(1);
     follow.start();
 
-    while (follow.getDisplacement()<16){
+    while (follow.getDisplacement()<16.5){
         follow.updateMapLap(0.3);
     }
 

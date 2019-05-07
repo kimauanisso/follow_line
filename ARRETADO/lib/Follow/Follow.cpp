@@ -160,7 +160,7 @@ void Follow::bluetooth(){
 
     int i = 0;
     for(i=0; i<markCount; i++){
-        bl.printf("%i--Lenght[m x 10^4]: %i--Radius[m x 10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
+        bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
     }
 }
 
@@ -236,7 +236,6 @@ void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
 
 void Follow::Map(){
     float angle;
-    float disp;
 
     int i;
     for(i=0; i<markCount; i++){
@@ -262,15 +261,17 @@ void Follow::Map(){
         mapLenght[i]=mapLenght[i]+mapLenght[i-1];
     }
 
-    //for(i=1; i<markCount; i++){
-    //    if( (mapLenght[i+1]-mapLenght[i]) < MarkDistance ){//correction to avoid more than one reading at the same mark
-    //        int j;
-    //        for(j=i;j<markCount;j++){
-    //           mapRadius[j+1]=mapRadius[j+2];
-    //           mapLenght[j]=mapLenght[j+1]; 
-    //        }
-    //    }
-    //}
+    for(i=0; i<markCount; i++){
+        if( (mapLenght[i+1]-mapLenght[i]) < MarkDistance ){//correction to avoid more than one reading at the same mark
+            int j;
+            for(j=i;j<markCount;j++){
+                mapLenght[j]=mapLenght[j+1]; 
+                mapRadius[j+1]=mapRadius[j+2];
+            }
+            markCount--;
+            i--;
+        }
+    }
 
 
 }
