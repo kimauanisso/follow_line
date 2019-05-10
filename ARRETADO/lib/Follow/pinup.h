@@ -1,6 +1,5 @@
 //sensors
 #define STURN A1
-#define SLAP A1
 #define S1 A2
 #define S2 A3
 #define S3 A4

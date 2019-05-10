@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"name": "teste sensor",
+			"path": "C:\\Users\\luciano\\Documents\\PlatformIO\\Projects\\teste sensor"
 		}
 	],
 	"settings": {

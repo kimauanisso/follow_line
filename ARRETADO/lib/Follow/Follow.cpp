@@ -6,13 +6,13 @@
 #include "Follow.h"
 
 //Sensors
-AnalogIn SensorC(STURN);
 AnalogIn Sensor1(S1);
 AnalogIn Sensor2(S2);
 AnalogIn Sensor3(S3);
 AnalogIn Sensor4(S4);
 AnalogIn Sensor5(S5);
 AnalogIn Sensor6(S6);
+InterruptIn markSensor(STURN);
 
 //Peripherals
 DigitalOut Buzz(BUZZER_PIN);
@@ -102,8 +102,7 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
     mapRight[100];//right wheel displacement 
     mapLenght[100];//line lenght (can be curve or straight line)
     mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
-    speed[100];//speed
-    markCount = 0;//number of marks read by the robt 
+    speed[100];//speed 
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
     left_ = left;           //left motor
@@ -120,13 +119,16 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
     I = 0;
     error_ = 0;
 
-    Mark_Debouncing_Clock = 0;  //clock used for the mark sensor debouncing (starts at 0)
-
     mapLeft[0] = 0;//left wheel displacement
     mapRight[0] = 0;//right wheel displacement 
 
     fastLapCount = 0;//used on the fast lap
+
+    mark; 
+    markCount = 0;//number of marks read by the robot
+
 }
+
 
 void Follow::waitButton()// wait until the button is pressed
 { 
@@ -150,6 +152,8 @@ void Follow::start(){ //wait until the button is pressed, then reset the encoder
 
     left_->reset();
     right_->reset();
+    
+    markSensor.rise(this, &Follow::getMark);
     millisStart();
 }
 
@@ -169,16 +173,8 @@ void Follow::stop(){//stop motors
     right_->stop();
 }
 
-bool Follow::getMark(){ //return 1 if the robot reads a mark
-    if (SensorC.read() < Ks)
-    {
-        if ((millis() - Mark_Debouncing_Clock) > MarkDebouncingTime)
-        {
-            Mark_Debouncing_Clock = millis();
-            return 1;
-        }
-    }
-    return 0;
+void Follow::getMark(){ //return 1 if the robot reads a mark
+    mark = 1;
 }
 
 void Follow::calcSensor(){
@@ -282,11 +278,12 @@ float Follow::accelerationZone(float v0, float v1, float acceleration){//calcula
 
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
-    if(getMark()){
-        //Buzz=!Buzz;
+    if(mark){
+        Buzz=!Buzz;
         markCount++;
         mapLeft[markCount] = left_->getDisplacement();
         mapRight[markCount] = right_->getDisplacement();
+        mark=0;
     }
     
     PID(setlinV);

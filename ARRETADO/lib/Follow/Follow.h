@@ -69,7 +69,7 @@ class Follow
     float getDisplacement();
     void calcSensor();
     float getSensor(); 
-    bool getMark();
+    void getMark();
     
     void Map();
     float accelerationZone(float, float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
@@ -86,7 +86,6 @@ class Follow
     float speed[100];
     int markCount;
     //----------------------------------------------------------------------------------------------------------------------------------------------------
-
   private:
     MotorControl *left_;
     MotorControl *right_;
@@ -107,8 +106,7 @@ class Follow
     float error_;
 
     int fastLapCount;//used on the fast lap
-
-    int Mark_Debouncing_Clock;
+    bool mark;
 };
 //-------------------------------------------------------------------------------------------------------------
 #endif
