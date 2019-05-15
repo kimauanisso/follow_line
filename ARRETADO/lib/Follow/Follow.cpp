@@ -102,7 +102,8 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
     mapRight[100];//right wheel displacement 
     mapLenght[100];//line lenght (can be curve or straight line)
     mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
-    speed[100];//speed 
+    speed[100];
+    breakLenght[100];
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
     left_ = left;           //left motor
@@ -121,6 +122,8 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
 
     mapLeft[0] = 0;//left wheel displacement
     mapRight[0] = 0;//right wheel displacement 
+    mapLenght[0] = 0;
+    mapRadius[0] = 0;
 
     fastLapCount = 0;//used on the fast lap
 
@@ -163,8 +166,8 @@ void Follow::bluetooth(){
     waitButton();//wait for the button
 
     int i = 0;
-    for(i=0; i<markCount; i++){
-        bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i\n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000) );
+    for(i=0; i<=markCount; i++){
+        bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i --speed[m/sx10^4]: %i \n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000), int(speed[i]*10000));
     }
 }
 
@@ -231,16 +234,21 @@ void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
 }
 
 void Follow::Map(){
+    
+    markCount++;
+    mapLeft[markCount] = left_->getDisplacement();
+    mapRight[markCount] = right_->getDisplacement();
+    
     float angle;
-
     int i;
-    for(i=0; i<markCount; i++){
+
+    for(i=1; i<=markCount; i++){
     
         //lenght = displacement - last displacement
-        mapLenght[i] = ( (mapLeft[i+1]+mapRight[i+1])/2 ) - ( (mapLeft[i]+mapRight[i])/2 );
+        mapLenght[i] = ( (mapLeft[i]+mapRight[i])/2 ) - ( (mapLeft[i-1]+mapRight[i-1])/2 );
         
         //robot angle = (Dleft - Dright)Robot radius 
-        angle = ( (mapLeft[i+1]-mapLeft[i]) - (mapRight[i+1]-mapRight[i]) ) / (2*RobotRadius);        
+        angle = ( (mapLeft[i]-mapLeft[i-1]) - (mapRight[i]-mapRight[i-1]) ) / (2*RobotRadius);        
         
         //curve
         if (fabs(angle)>0.0001){
@@ -254,32 +262,63 @@ void Follow::Map(){
     }
 
     for(i=1; i<markCount; i++){
-        mapLenght[i]=mapLenght[i]+mapLenght[i-1];
-    }
-
-    for(i=0; i<markCount; i++){
-        if( (mapLenght[i+1]-mapLenght[i]) < MarkDistance ){//correction to avoid more than one reading at the same mark
+        if( (fabs(mapRadius[i])>0.5) and (fabs(mapRadius[i+1])>0.5) )
+        {
+            mapLenght[i] = mapLenght[i] + mapLenght[i+1];
             int j;
-            for(j=i;j<markCount;j++){
-                mapLenght[j]=mapLenght[j+1]; 
-                mapRadius[j+1]=mapRadius[j+2];
+            for (j = (i+1); j < markCount; j++)
+            {
+                mapLenght[j] = mapLenght[j+1];
+                mapRadius[j] = mapRadius[j+1]; 
             }
             markCount--;
             i--;
+       }
+    }
+
+    for(i=1; i<markCount; i++){
+        if(fabs(mapRadius[i])>0.5)
+        {
+            speed[i] = MAXSPEED;
+        }
+        else{
+            speed[i] = 0.3;
         }
     }
 
 
+    for(i=1; i<=markCount; i++){
+        mapLenght[i]=mapLenght[i]+mapLenght[i-1];
+    }
+
+    for(i=0; i<markCount; i++){//straight line break, if(straight line and if it is bigger than the breaking zone)
+        if( ( fabs(mapRadius[i]) > 0.5 ) and ( (mapLenght[i]-mapLenght[i-1])>fabs(accelerationZone(speed[i-1],speed[i]))) ){
+            int j;
+            for (j = markCount; j >= i; j--)
+            {
+                speed[j+1] = speed[j];
+                mapLenght[j+1] = mapLenght[j];
+                mapRadius[j+1] = mapRadius[j];
+            }
+            speed[i+1] = speed [i+2];
+            mapLenght[i] = mapLenght[i] - fabs(accelerationZone(speed[i],speed[i+1]) );
+            markCount++;
+       }
+    }
 }
 
-float Follow::accelerationZone(float v0, float v1, float acceleration){//calculates the distance that the robot will need to start accelerating to achieve the next speed
-    return mapLenght[fastLapCount] - (pow(v1, 2)-pow(v0,2))/(2*acceleration);
+float Follow::accelerationZone(float v0, float v1){//calculates the distance that the robot will need to start accelerating to achieve the next speed
+    return ( (pow(v1, 2) - pow(v0,2)) /(2*ACCELERATION) );//torricelli
+}
+
+float Follow::accelerate(float ds, float v0){//calculates the distance that the robot will need to start accelerating to achieve the next speed
+    return sqrt( fabs(pow(v0,2) + 2*ACCELERATION*ds) );//torricelli
 }
 
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
     if(mark){
-        Buzz=!Buzz;
+        //Buzz=!Buzz;
         markCount++;
         mapLeft[markCount] = left_->getDisplacement();
         mapRight[markCount] = right_->getDisplacement();
@@ -290,10 +329,28 @@ void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 }
 
 void Follow::updateFastLap(float acceleration, float maxSpeed){//setpoint acceleration, setpoint maxSpeed
-    
-    if( (this->getDisplacement()) > mapLenght[fastLapCount]){
+
+    if( (this->getDisplacement()) >= mapLenght[fastLapCount]){
         fastLapCount++;
     }
 
-    PID(speed[fastLapCount]);
+    float linearVelocity = speed[fastLapCount];
+    float ds;
+
+    if( fabs(mapRadius[fastLapCount])>2 ){
+        ds = (this->getDisplacement()) - mapLenght[fastLapCount-1];
+        
+        if(speed[fastLapCount]<speed[fastLapCount-1]){
+            ds = -ds;
+        }
+
+        linearVelocity = accelerate(ds, speed[fastLapCount-1]);
+        
+        if(linearVelocity>speed[fastLapCount] and ds>0){
+            linearVelocity=speed[fastLapCount];
+        }
+
+    }
+
+    PID(linearVelocity);
 }

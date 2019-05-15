@@ -12,6 +12,8 @@
 #include "millis.h"
 #include "pinup.h"
 
+#define ACCELERATION 4.5
+#define MAXSPEED 1
 #define MarkDebouncingTime 100
 #define Kwheel 0.0008623725     //Wheel constant -> pulses*Kwheel
 #define Ks 0.8                  //Sensor constant
@@ -72,8 +74,8 @@ class Follow
     void getMark();
     
     void Map();
-    float accelerationZone(float, float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
-
+    float accelerate(float, float);
+    float accelerationZone(float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
     void bluetooth();
     void stop();
   
@@ -84,6 +86,7 @@ class Follow
     float mapLenght[100];//line lenght (can be curve or straight line)
     float mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
     float speed[100];
+    float breakLenght[100];
     int markCount;
     //----------------------------------------------------------------------------------------------------------------------------------------------------
   private:
