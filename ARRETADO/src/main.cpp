@@ -24,7 +24,7 @@ float speed[100]
 int main()
 {
     wait(1);
-    follow.start();
+    follow.start();//BANANA
 
     while (follow.getDisplacement()<16.5){
         follow.updateMapLap(0.3);
