@@ -291,6 +291,7 @@ void Follow::Map(){
         mapLenght[i]=mapLenght[i]+mapLenght[i-1];
     }
 
+
     for(i=0; i<markCount; i++){//straight line break, if(straight line and if it is bigger than the breaking zone)
         if( ( fabs(mapRadius[i]) > 0.5 ) and ( (mapLenght[i]-mapLenght[i-1])>fabs(accelerationZone(speed[i-1],speed[i]))) ){
             int j;
