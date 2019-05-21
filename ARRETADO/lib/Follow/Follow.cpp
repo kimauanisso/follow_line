@@ -279,7 +279,7 @@ float Follow::accelerationZone(float v0, float v1, float acceleration){//calcula
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
     if(mark){
-        Buzz=!Buzz;
+        //Buzz=!Buzz;
         markCount++;
         mapLeft[markCount] = left_->getDisplacement();
         mapRight[markCount] = right_->getDisplacement();

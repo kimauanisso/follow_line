@@ -10,8 +10,8 @@
 //left motor
 #define OUTB1 D0 //ENCODER
 #define OUTA1 D1 //ENCODER
-#define AIN1 D8  //MOTOR DIRECTION
-#define AIN2 D7  //MOTOR DIRECTION
+#define AIN1 D7  //MOTOR DIRECTION
+#define AIN2 D8  //MOTOR DIRECTION
 #define PWMA D6
 
 //right motor
