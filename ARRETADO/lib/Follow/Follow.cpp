@@ -277,7 +277,7 @@ void Follow::Map(){
     }
 
     for(i=1; i<markCount; i++){
-        if(fabs(mapRadius[i])>0.5)
+        if( (fabs(mapRadius[i])>0.5) and (fabs(mapLenght[i])>0.5))
         {
             speed[i] = MAXSPEED;
         }
