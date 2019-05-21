@@ -11,16 +11,17 @@ QEI leftEncoder(OUTA1, OUTB1, NC, 120, QEI::X4_ENCODING);  //chanA, chanB, index
 QEI rightEncoder(OUTA2, OUTB2, NC, 120, QEI::X4_ENCODING); //chanA, chanB, index, ppr ->12 readings per revolution * Gear Ratio=1:10
 
 //Motor Controlled Speed
-MotorControl leftMotor(2, 0.000005, 0, &leftPWM, &leftEncoder);  //kP, kI, kD, looptime, leftPWM  address, leftEncoder  address
+MotorControl leftMotor(2.77, 0.000005, 0, &leftPWM, &leftEncoder);  //kP, kI, kD, looptime, leftPWM  address, leftEncoder  address
+//                     3.2, 0.000005, 0 --> bat 8.00
 MotorControl rightMotor(2, 0.000005, 0, &rightPWM, &rightEncoder); //kP, kI, kD, RightPWM address, RightEncoder address
 
 //Follow Class----angular velocity, sensor bar, curve radius...
 Follow follow(0.02, 0, 0.05, &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
-
+//            0.02, 0, 0.05 --> bat 8.00
 int main()
 {
     wait(1);
-    follow.start();
+    follow.start();//BANANA
 
     while (follow.getDisplacement()<16.5){
         follow.updateMapLap(0.3);

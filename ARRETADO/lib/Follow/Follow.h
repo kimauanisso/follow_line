@@ -15,7 +15,7 @@
 #define ACCELERATION 4.5
 #define MAXSPEED 1
 #define MarkDebouncingTime 100
-#define Kwheel 0.0008623725     //Wheel constant -> pulses*Kwheel
+#define Kwheel 0.0008339142      //Wheel constant -> pulses*Kwheel
 #define Ks 0.8                  //Sensor constant
 #define RobotRadius 0.061773    //Raio centro - motor
 #define MarkDistance 0.03       //min distance between two marks[m]
