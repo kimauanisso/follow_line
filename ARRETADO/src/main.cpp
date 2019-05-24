@@ -11,14 +11,17 @@ QEI leftEncoder(OUTA1, OUTB1, NC, 120, QEI::X4_ENCODING);  //chanA, chanB, index
 QEI rightEncoder(OUTA2, OUTB2, NC, 120, QEI::X4_ENCODING); //chanA, chanB, index, ppr ->12 readings per revolution * Gear Ratio=1:10
 
 //Motor Controlled Speed
-MotorControl leftMotor(2.0, 0.000005, 0, &leftPWM, &leftEncoder);  //kP, kI, kD, looptime, leftPWM  address, leftEncoder  address
+MotorControl leftMotor(1.7, 0.000005, 0, &leftPWM, &leftEncoder);  //kP, kI, kD, looptime, leftPWM  address, leftEncoder  address
 //                     3.2, 0.000005, 0 --> bat 8.00
-MotorControl rightMotor(2.0, 0.000005, 0, &rightPWM, &rightEncoder); //kP, kI, kD, RightPWM address, RightEncoder address
+MotorControl rightMotor(1.9, 0.000005, 0, &rightPWM, &rightEncoder); //kP, kI, kD, RightPWM address, RightEncoder address
 
 //Follow Class----angular velocity, sensor bar, curve radius...
-Follow follow(0.028, 0, 0.06 , &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
+Follow follow(0.030, 0, 0.06 , &leftMotor, &rightMotor, 20);//kp, ki, kd, leftmotor(object), rightmotor(object), looptime
 //            0.025, 0, 0.06 --> bat 8.00
 
+float distance[100];
+float velocity[100];
+float count = 0;
 
 int main()
 {
@@ -36,48 +39,47 @@ int main()
     wait(1);
     follow.start();
 
-    while (follow.getDisplacement()<1.4){
-        follow.updateFastLap(0.3);
+    while (follow.getDisplacement()<16.5){
+        follow.updateFastLap(0.9);
     }
-    follow.stop();
-    while(1){
-        wait(1);
+    while (follow.getDisplacement()<1.10){
+        follow.updateFastLap(2.0);
     }
-    while (follow.getDisplacement()<0.4){
-        follow.updateFastLap(1.2);
+    while (follow.getDisplacement()<2.00){
+        follow.updateFastLap(0.80);
     }
-    while (follow.getDisplacement()<1.0){
-        follow.updateFastLap(1.6);
+    while (follow.getDisplacement()<2.20){
+        follow.updateFastLap(2.00);
     }
-    while (follow.getDisplacement()<1.2){
-        follow.updateFastLap(1.0);  
+    while (follow.getDisplacement()<2.65){
+        follow.updateFastLap(0.80);  
     }
-    while (follow.getDisplacement()<1.3){
-        follow.updateFastLap(0.5);
+    while (follow.getDisplacement()<4.70){
+        follow.updateFastLap(2.00);
     }
-    while (follow.getDisplacement()<2.77){
-        follow.updateFastLap(0.5);
+    while (follow.getDisplacement()<5.80){
+        follow.updateFastLap(0.80);
     }
-    while (follow.getDisplacement()<2.87){
-        follow.updateFastLap(1.0);
+    while (follow.getDisplacement()<6.00){
+        follow.updateFastLap(1.80);
     }
-    while (follow.getDisplacement()<2.97){
-        follow.updateFastLap(1.8);
+    while (follow.getDisplacement()<6.70){
+        follow.updateFastLap(0.80);
     }
-    while (follow.getDisplacement()<4.84){
-        follow.updateFastLap(1.2);
+    while (follow.getDisplacement()<6.90){
+        follow.updateFastLap(1.80);
     }
-    while (follow.getDisplacement()<4.94){
-        follow.updateFastLap(0.6);
+    while (follow.getDisplacement()<7.50){
+        follow.updateFastLap(0.80);
     }
-    while (follow.getDisplacement()<5.05){
-        follow.updateFastLap(0.3);
+    while (follow.getDisplacement()<9.40){
+        follow.updateFastLap(1.50);
     }
-    while (follow.getDisplacement()<7.30){
-        follow.updateFastLap(0.6);
+    while (follow.getDisplacement()<10.10){
+        follow.updateFastLap(0.90);
     }
     while (follow.getDisplacement()<16.5){
-        follow.updateFastLap(0.6);
+        follow.updateFastLap(0.0);
     }
     follow.stop();
 }
