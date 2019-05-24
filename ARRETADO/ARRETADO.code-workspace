@@ -6,6 +6,10 @@
 		{
 			"name": "teste sensor",
 			"path": "C:\\Users\\luciano\\Documents\\PlatformIO\\Projects\\teste sensor"
+		},
+		{
+			"name": "testebarra",
+			"path": "C:\\Users\\luciano\\Documents\\PlatformIO\\Projects\\testebarra"
 		}
 	],
 	"settings": {

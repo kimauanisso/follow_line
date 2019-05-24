@@ -11,8 +11,8 @@ AnalogIn Sensor2(S2);
 AnalogIn Sensor3(S3);
 AnalogIn Sensor4(S4);
 AnalogIn Sensor5(S5);
-AnalogIn Sensor6(S6);
-InterruptIn markSensor(STURN);
+AnalogIn Sensor6(A0);
+InterruptIn markSensor(A4);
 
 //Peripherals
 DigitalOut Buzz(BUZZER_PIN);
@@ -79,7 +79,7 @@ void MotorControl::stop()
 
 float MotorControl::getDisplacement()
 {
-    return (encoder_->getPulses() * Kwheel);
+    return (this->encoder_->getPulses() * Kwheel);
 }
 
 float MotorControl::getSpeed()
@@ -102,8 +102,6 @@ Follow::Follow(float kP, float kI, float kD, MotorControl *left, MotorControl *r
     mapRight[100];//right wheel displacement 
     mapLenght[100];//line lenght (can be curve or straight line)
     mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
-    speed[100];
-    breakLenght[100];
     //----------------------------------------------------------------------------------------------------------------------------------------------------
 
     left_ = left;           //left motor
@@ -167,24 +165,29 @@ void Follow::bluetooth(){
 
     int i = 0;
     for(i=0; i<=markCount; i++){
-        bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i --speed[m/sx10^4]: %i \n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000), int(speed[i]*10000));
+        bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i \n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000));
     }
 }
 
 void Follow::stop(){//stop motors
+    
+    markCount++;
+    mapLeft[markCount] = left_->getDisplacement();
+    mapRight[markCount] = right_->getDisplacement();
+
     left_->stop();
     right_->stop();
 }
 
 void Follow::getMark(){ //return 1 if the robot reads a mark
-    mark = 1;
+    markCount++;
 }
 
 void Follow::calcSensor(){
     int cont = 0;
     int i = 0;
 
-    bool s[] = {(Sensor1.read() < Ks), (Sensor2.read() < Ks), (Sensor3.read() < Ks), (Sensor4.read() < Ks), (Sensor5.read() < Ks), (Sensor6.read() < Ks)};
+    bool s[] = {(Sensor1<Ks), (Sensor2<Ks), (Sensor3<Ks), (Sensor4<Ks), (Sensor5<Ks), (Sensor6<Ks)};
     
     for (i = 0; i < 6; i++)
     {
@@ -234,11 +237,7 @@ void Follow::PID(float setlinV){//setpoint acceleration, setpoint maxSpeed
 }
 
 void Follow::Map(){
-    
-    markCount++;
-    mapLeft[markCount] = left_->getDisplacement();
-    mapRight[markCount] = right_->getDisplacement();
-    
+
     float angle;
     int i;
 
@@ -276,45 +275,13 @@ void Follow::Map(){
        }
     }
 
-    for(i=1; i<markCount; i++){
-        if( (fabs(mapRadius[i])>0.5) and (fabs(mapLenght[i])>0.5))
-        {
-            speed[i] = MAXSPEED;
-        }
-        else{
-            speed[i] = 0.3;
-        }
-    }
-
-
     for(i=1; i<=markCount; i++){
         mapLenght[i]=mapLenght[i]+mapLenght[i-1];
-    }
+    }   
 
 
-    for(i=0; i<markCount; i++){//straight line break, if(straight line and if it is bigger than the breaking zone)
-        if( ( fabs(mapRadius[i]) > 0.5 ) and ( (mapLenght[i]-mapLenght[i-1])>fabs(accelerationZone(speed[i-1],speed[i]))) ){
-            int j;
-            for (j = markCount; j >= i; j--)
-            {
-                speed[j+1] = speed[j];
-                mapLenght[j+1] = mapLenght[j];
-                mapRadius[j+1] = mapRadius[j];
-            }
-            speed[i+1] = speed [i+2];
-            mapLenght[i] = mapLenght[i] - fabs(accelerationZone(speed[i],speed[i+1]) );
-            markCount++;
-       }
-    }
 }
 
-float Follow::accelerationZone(float v0, float v1){//calculates the distance that the robot will need to start accelerating to achieve the next speed
-    return ( (pow(v1, 2) - pow(v0,2)) /(2*ACCELERATION) );//torricelli
-}
-
-float Follow::accelerate(float ds, float v0){//calculates the distance that the robot will need to start accelerating to achieve the next speed
-    return sqrt( fabs(pow(v0,2) + 2*ACCELERATION*ds) );//torricelli
-}
 
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
@@ -329,29 +296,14 @@ void Follow::updateMapLap(float setlinV){//setpoint linear velocity
     PID(setlinV);
 }
 
-void Follow::updateFastLap(float acceleration, float maxSpeed){//setpoint acceleration, setpoint maxSpeed
-
-    if( (this->getDisplacement()) >= mapLenght[fastLapCount]){
-        fastLapCount++;
-    }
-
-    float linearVelocity = speed[fastLapCount];
-    float ds;
-
-    if( fabs(mapRadius[fastLapCount])>2 ){
-        ds = (this->getDisplacement()) - mapLenght[fastLapCount-1];
-        
-        if(speed[fastLapCount]<speed[fastLapCount-1]){
-            ds = -ds;
-        }
-
-        linearVelocity = accelerate(ds, speed[fastLapCount-1]);
-        
-        if(linearVelocity>speed[fastLapCount] and ds>0){
-            linearVelocity=speed[fastLapCount];
-        }
-
-    }
-
+void Follow::updateFastLap(float linearVelocity){//setpoint acceleration, setpoint maxSpeed
+    mark=0;
+    //printf("%i  %i %i %i\n",int(left_->getDisplacement()*10000), int(right_->getDisplacement()*10000), int(sensor_*100000), markCount );
     PID(linearVelocity);
+}
+
+float Follow::accelerate(float a, float v0, float v1){//calculates the distance that the robot will need to start accelerating to achieve the next speed
+    float linearVelocity = v0;
+    
+    PID(v1);
 }
