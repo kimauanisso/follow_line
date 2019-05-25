@@ -162,11 +162,13 @@ void Follow::start(){ //wait until the button is pressed, then reset the encoder
 void Follow::bluetooth(){
     Serial bl(BL_RX,BL_TX);//turn Serial on
     waitButton();//wait for the button
+    Buzz = 1;
 
     int i = 0;
     for(i=0; i<=markCount; i++){
         bl.printf("%i --Lenght[mx10^4]: %i --Radius[mx10^4]: %i \n", i, int(mapLenght[i]*10000), int(mapRadius[i]*10000));
     }
+    Buzz = 0;
 }
 
 void Follow::stop(){//stop motors
@@ -181,6 +183,8 @@ void Follow::stop(){//stop motors
 
 void Follow::getMark(){ //return 1 if the robot reads a mark
     markCount++;
+    mapLeft[markCount] = left_->getDisplacement();
+    mapRight[markCount] = right_->getDisplacement();
 }
 
 void Follow::calcSensor(){
@@ -199,6 +203,7 @@ void Follow::calcSensor(){
         sensor_ = (s[0] * SEN2 + s[1] * SEN1 + s[2] * SEN0 + s[3] * -SEN0 + s[4] * -SEN1 + s[5] * -SEN2) / cont;
     }
 }
+
 
 float Follow::getSensor(){ //returns the SensorBar position
     return (sensor_);//return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
@@ -275,6 +280,20 @@ void Follow::Map(){
        }
     }
 
+    for(i=1; i<markCount; i++){
+        if(mapRadius[i]>0.5){
+            int j;
+            for(j=markCount; j>i; j--){
+                mapLenght[j+1]=mapLenght[j];
+                mapRadius[j+1]=mapRadius[j];
+            }
+
+            mapLenght[i+1]=mapLenght[i]*1/4;
+            mapLenght[i]=mapLenght[i]*3/4;
+            markCount++;
+        }
+    }
+
     for(i=1; i<=markCount; i++){
         mapLenght[i]=mapLenght[i]+mapLenght[i-1];
     }   
@@ -285,20 +304,11 @@ void Follow::Map(){
 
 void Follow::updateMapLap(float setlinV){//setpoint linear velocity
 
-    if(mark){
-        //Buzz=!Buzz;
-        markCount++;
-        mapLeft[markCount] = left_->getDisplacement();
-        mapRight[markCount] = right_->getDisplacement();
-        mark=0;
-    }
-    
+    //printf("%i  %i %i %i\n",int(left_->getDisplacement()*10000), int(right_->getDisplacement()*10000), int(sensor_*100000), markCount );
     PID(setlinV);
 }
 
 void Follow::updateFastLap(float linearVelocity){//setpoint acceleration, setpoint maxSpeed
-    mark=0;
-    //printf("%i  %i %i %i\n",int(left_->getDisplacement()*10000), int(right_->getDisplacement()*10000), int(sensor_*100000), markCount );
     PID(linearVelocity);
 }
 
