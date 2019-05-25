@@ -12,17 +12,18 @@
 #include "millis.h"
 #include "pinup.h"
 
-#define ACCELERATION 4.5
-#define MAXSPEED 1
+#define Kwheel 0.00080        //Wheel constant -> pulses*Kwheel
+#define ACCELERATION 1
+#define MAXSPEED 2
 #define MarkDebouncingTime 100
-#define Kwheel 0.0008477      //Wheel constant -> pulses*Kwheel
-#define Ks 0.8                  //Sensor constant
+#define Ks 0.5                  //Sensor constant
 #define RobotRadius 0.061773    //Raio centro - motor
 #define MarkDistance 0.03       //min distance between two marks[m]
 #define Dbar 0.098              //distance between the bar and the robot[m]
-#define SEN0 0.15               //Angulo do sensor de dentro (rad)
+
+#define SEN0 1.5                //Angulo do sensor de dentro (rad)
 #define SEN1 2.0                //Angulo do sensor do meio   (rad)
-#define SEN2 18.0               //Angulo do sensor de fora   (rad)
+#define SEN2 25.0               //Angulo do sensor de fora   (rad)
 
 //----------------------------------------------------------------------------------------------------------------
 class MotorControl
@@ -66,15 +67,19 @@ class Follow
     
     void updateMapLap(float);//update map lap with the linear speed[m/s] as parameter
     
-    void updateFastLap(float, float);//update fast lap with the linear speed[m/s] as parameter
+    void updateFastLap(float);//update fast lap with the linear speed[m/s] as parameter
+
+    void straight(float);
 
     float getDisplacement();
     void calcSensor();
     float getSensor(); 
     void getMark();
+
+    int ButtonPress(void);
     
     void Map();
-    float accelerate(float, float);
+    float accelerate(float, float, float);
     float accelerationZone(float, float);//calculates the distance that the robot will need to start accelerating to achieve the next speed
     void bluetooth();
     void stop();
@@ -85,7 +90,6 @@ class Follow
     float mapRight[100];
     float mapLenght[100];//line lenght (can be curve or straight line)
     float mapRadius[100];//line radius (can be curve or straight line) ->99999 for straight line
-    float speed[100];
     float breakLenght[100];
     int markCount;
     //----------------------------------------------------------------------------------------------------------------------------------------------------
