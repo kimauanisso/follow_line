@@ -5,7 +5,7 @@
  * This example code is in the public domain.
  */
 
-#include <Encoder.h>
+#include "Encoder.h"
 
 // Change these pin numbers to the pins connected to your encoder.
 //   Best Performance: both pins have interrupt capability
