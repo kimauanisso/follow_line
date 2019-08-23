@@ -12,7 +12,8 @@
 #include "millis.h"
 #include "pinup.h"
 
-#define Kwheel 0.00080        //Wheel constant -> pulses*Kwheel
+#define Kwheel 0.000777
+        //Wheel constant -> pulses*Kwheel
 #define ACCELERATION 1
 #define MAXSPEED 2
 #define MarkDebouncingTime 100
@@ -21,9 +22,9 @@
 #define MarkDistance 0.03       //min distance between two marks[m]
 #define Dbar 0.098              //distance between the bar and the robot[m]
 
-#define SEN0 1.5                //Angulo do sensor de dentro (rad)
-#define SEN1 2.0                //Angulo do sensor do meio   (rad)
-#define SEN2 25.0               //Angulo do sensor de fora   (rad)
+#define SEN0 1.0                //Angulo do sensor de dentro (rad)
+#define SEN1 3                //Angulo do sensor do meio   (rad)
+#define SEN2 35.0               //Angulo do sensor de fora   (rad)
 
 //----------------------------------------------------------------------------------------------------------------
 class MotorControl
@@ -77,6 +78,7 @@ class Follow
     void getMark();
 
     int ButtonPress(void);
+    void straightFoward(float);
     
     void Map();
     float accelerate(float, float, float);

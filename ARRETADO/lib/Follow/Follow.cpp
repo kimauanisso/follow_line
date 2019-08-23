@@ -227,6 +227,19 @@ void Follow::calcSensor(){
     }
 }
 
+void Follow::straightFoward(float setlinV){
+    int dt = millis() - time_;
+    if (dt >= loopTime_)//if dt is bigger than looptime, update bar PID and also motor's PID 
+    {
+        time_ = millis();
+
+        //update displacement
+        displacement_ = this->getDisplacement();
+
+        left_->update(setlinV);
+        right_->update(setlinV);
+    }
+}
 
 float Follow::getSensor(){ //returns the SensorBar position
     return (sensor_);//return ((sensor_ * linV_) / (Dbar * cos(sensor_)));
