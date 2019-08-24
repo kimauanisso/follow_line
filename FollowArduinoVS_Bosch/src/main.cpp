@@ -1,11 +1,9 @@
 #include <Arduino.h>
-#include <TB6612.h>
+void setup(){
 
-void setup() {
-  //laranjajajaja
 }
 
-void loop() {
+void loop(){
 
 }
 
